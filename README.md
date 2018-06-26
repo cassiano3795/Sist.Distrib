@@ -10,3 +10,5 @@ Para a aplicação:
   - Entrar na pasta ExpressApp;
   - Executar o comando "npm install";
   - Executar o comando "npm start"
+  
+  *** Arquivo de config encontrasse na pasta ExpressApp/config.json
