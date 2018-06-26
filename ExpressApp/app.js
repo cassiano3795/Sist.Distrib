@@ -8,10 +8,13 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
 var config = require('./config.json');
+var Memcached = require('memcached');
+
+var memcached = new Memcached(`${config.memcachedServer}:${config.memcachedPort}`);
 
 var routes = require('./routes/index');
 
-var app = express();    
+var app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -61,5 +64,17 @@ app.use(function (err, req, res, next) {
 app.set('port', process.env.PORT || config.portListen);
 
 var server = app.listen(app.get('port'), function () {
+    registerOnMemcached();
     debug('Express server listening on port ' + server.address().port);
 });
+
+function registerOnMemcached(name, ipConfig, port) {
+    var ip = require("ip");
+
+    memcached.set('SD_ListServers', {
+        name: config.serverName,
+        location: ip.address,
+        year: config.yearData,
+        active: true
+    })
+}

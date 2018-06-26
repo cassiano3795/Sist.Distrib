@@ -27,24 +27,29 @@ router.get('/getData/:year', function (req, res) {
     var playerName = req.param('playerName');
     var clubName = req.param('clubName');
     var dt;
-    
+
     getDataMemCached(year, playerName, clubName).then(data => {
         if (data) {
             dt = data;
             res.send(data);
         } else {
-            var toExecute;
-            if (typeof playerName == 'undefined' && typeof clubName == 'undefined') {
-                toExecute = getDataMysqlAllNull(year);
-            } else if (typeof playerName == 'undefined') {
-                toExecute = getDataMySqlPlayerNull(year, clubName);
-            } else if (typeof clubName == 'undefined') {
-                toExecute = getDataMySqlClubNull(year, playerName);
-            } else {
-                toExecute = getDataMySql(year, playerName, clubName);
-            }
 
-            //TODO: INSERE NO MEMCACHED
+            var myYears = config.yearData;
+
+            if (myYears.includes(year.substr(0, 4))) {
+                var toExecute;
+                if (typeof playerName == 'undefined' && typeof clubName == 'undefined') {
+                    toExecute = getDataMysqlAllNull(year.substr(0, 4));
+                } else if (typeof playerName == 'undefined') {
+                    toExecute = getDataMySqlPlayerNull(year.substr(0, 4), clubName);
+                } else if (typeof clubName == 'undefined') {
+                    toExecute = getDataMySqlClubNull(year.substr(0, 4), playerName);
+                } else {
+                    toExecute = getDataMySql(year.substr(0, 4), playerName, clubName);
+                }
+            } else {
+                //TODO: PEDIR PRA QUEM TEM
+            }
 
             toExecute.then(data => {
                 dt.data;
@@ -292,9 +297,33 @@ function getDataMysqlAllNull(year) {
             database: "sist_distrib"
         });
 
-        var sqlAway = `select home_team_goal, away_team_goal
+        var sql = `select home_team_goal, away_team_goal
                                 from \`match\`
                                 where DATE(date) like '%${year}%'`;
+
+        var match = {
+            matchs: 0,
+            wins: 0,
+            losses: 0
+        }
+
+        con.connect(function (err) {
+            if (err) throw err;
+            con.query(sql, function (err, result, fields) {
+                if (err) throw err;
+                data = result;
+                data.forEach(home => {
+                    match.matchs += 1;
+                    if (home.home_team_goal > home.away_team_goal) {
+                        match.wins += 1;
+                    } else {
+                        match.losses += 1;
+                    }
+                });
+
+                resolve(match);
+            });
+        });
     });
 }
 
@@ -347,6 +376,7 @@ function getAvaibleYears() {
 function getDataMemCached(year, playerName, clubName) { //TODO: PARAMETROS DE BUSCA MEMCACHED
     return new Promise((resolve, reject) => {
         var key = `SD_Data_${year}_${typeof clubName != 'undefined' ? clubName : ''}${typeof playerName != 'undefined' ? '_' + playerName : ''}`
+        key = key.replace(' ', '+');
 
         memcached.get(key, function (err, data) {
             if (err) {
