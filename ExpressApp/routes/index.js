@@ -53,11 +53,10 @@ router.get('/getData/:year', function (req, res) {
         }
     }).catch(err => {
         res.send(err);
+        return;
     });
 
-    setDataMemCached(year, playerName, clubName, dt)
-
-
+    setDataMemCached(year, playerName, clubName, dt);
 });
 
 function getClubId(clubName) {
@@ -347,7 +346,7 @@ function getAvaibleYears() {
 
 function getDataMemCached(year, playerName, clubName) { //TODO: PARAMETROS DE BUSCA MEMCACHED
     return new Promise((resolve, reject) => {
-        var key = `SD_Data_${year}_${typeof clubName != 'undefined' ? clubName : ''}_${typeof playerName != 'undefined' ? playerName : ''}`
+        var key = `SD_Data_${year}_${typeof clubName != 'undefined' ? clubName : ''}${typeof playerName != 'undefined' ? '_' + playerName : ''}`
 
         memcached.get(key, function (err, data) {
             if (err) {
@@ -362,7 +361,7 @@ function setDataMemCached(year, playerName, clubName, value) { //TODO: PARAMETRO
     return new Promise((resolve, reject) => {
         var key = `SD_Data_${year}_${typeof clubName != 'undefined' ? clubName : ''}_${typeof playerName != 'undefined' ? playerName : ''}`
 
-        memcached.set(key, value, )
+        memcached.set(key, value);
     });
 }
 
