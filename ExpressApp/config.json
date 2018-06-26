@@ -1,0 +1,8 @@
+{
+    "serverName" : "serverCassiano",
+  "serverIP" : "127.0.0.1",
+  "portListen" : 3000,
+  "memcachedServer" : "10.1.1.1",
+  "memcachedPort" : 11211,
+  "yearData" : [1999, 2000]
+}
