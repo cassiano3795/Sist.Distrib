@@ -2,7 +2,7 @@
     "serverName" : "serverCassiano",
   "serverIP" : "127.0.0.1",
   "portListen" : 30126,
-  "memcachedServer" : "10.1.1.1",
+  "memcachedServer" : "172.23.5.5",
   "memcachedPort" : 11211,
-  "yearData" : [1999, 2000]
+  "yearData" : [2017]
 }

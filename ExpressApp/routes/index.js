@@ -362,9 +362,9 @@ function getAvaibleYears() {
                 reject(err);
             }
 
-            data.forEach(server => {
+            JSON.parse(data).servers.forEach(server => {
                 if (server.active == true) {
-                    years.push(server.years);
+                    years.push(server.year[0]);
                     years.sort();
                 }
             });
@@ -391,7 +391,7 @@ function setDataMemCached(year, playerName, clubName, value) { //TODO: PARAMETRO
     return new Promise((resolve, reject) => {
         var key = `SD_Data_${year}_${typeof clubName != 'undefined' ? clubName : ''}_${typeof playerName != 'undefined' ? playerName : ''}`
 
-        memcached.set(key, value);
+        memcached.set(key, value, 30000);
     });
 }
 

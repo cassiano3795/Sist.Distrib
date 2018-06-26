@@ -76,5 +76,5 @@ function registerOnMemcached(name, ipConfig, port) {
         location: ip.address,
         year: config.yearData,
         active: true
-    })
+    }, 30000)
 }
