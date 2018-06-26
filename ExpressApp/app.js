@@ -69,7 +69,7 @@ var server = app.listen(app.get('port'), function () {
 });
 
 function registerOnMemcached(name, ipConfig, port) {
-    var ip = require("ip");
+    var ip = require('ip');
 
     memcached.set('SD_ListServers', {
         name: config.serverName,
