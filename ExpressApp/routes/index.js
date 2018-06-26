@@ -29,12 +29,13 @@ router.get('/getData/:year', function (req, res) {
     var dt;
 
     getDataMemCached(year, playerName, clubName).then(data => {
-        var myYears = config.yearData;
-
         if (data) {
             dt = data;
             res.send(data);
         } else {
+
+            var myYears = config.yearData;
+
             if (myYears.includes(year.substr(0, 4))) {
                 var toExecute;
                 if (typeof playerName == 'undefined' && typeof clubName == 'undefined') {
@@ -51,7 +52,7 @@ router.get('/getData/:year', function (req, res) {
             }
 
             toExecute.then(data => {
-                dt.data;
+                dt = data;
                 res.send(data);
             })
         }
@@ -303,7 +304,7 @@ function getDataMysqlAllNull(year) {
         var match = {
             matchs: 0,
             wins: 0,
-            losses: 0
+            loses: 0
         }
 
         con.connect(function (err) {
@@ -316,7 +317,7 @@ function getDataMysqlAllNull(year) {
                     if (home.home_team_goal > home.away_team_goal) {
                         match.wins += 1;
                     } else {
-                        match.losses += 1;
+                        match.loses += 1;
                     }
                 });
 
