@@ -5,9 +5,7 @@ var router = express.Router();
 var config = require('../config.json')
 var Memcached = require('memcached');
 
-var memcached = new Memcached({
-    locations: config.memcachedServer + ':' + config.memcachedPort
-});
+var memcached = new Memcached(`${config.memcachedServer}:${config.memcachedPort}`);
 
 /* GET home page. */
 router.get('/', function (req, res) {
@@ -28,26 +26,38 @@ router.get('/getData/:year', function (req, res) {
     var year = req.param('year');
     var playerName = req.param('playerName');
     var clubName = req.param('clubName');
+    var dt;
+    
+    getDataMemCached(year, playerName, clubName).then(data => {
+        if (data) {
+            dt = data;
+            res.send(data);
+        } else {
+            var toExecute;
+            if (typeof playerName == 'undefined' && typeof clubName == 'undefined') {
+                toExecute = getDataMysqlAllNull(year);
+            } else if (typeof playerName == 'undefined') {
+                toExecute = getDataMySqlPlayerNull(year, clubName);
+            } else if (typeof clubName == 'undefined') {
+                toExecute = getDataMySqlClubNull(year, playerName);
+            } else {
+                toExecute = getDataMySql(year, playerName, clubName);
+            }
 
-    //TODO: TENTAR BUSCAR NO MEMCACHED
-    //SE DER, RETORNA O VALOR, NÃO EXISTIR, BUSCA LOCAL
+            //TODO: INSERE NO MEMCACHED
 
-    var toExecute;
-    if (typeof playerName == 'undefined' && typeof clubName == 'undefined'){
-        toExecute = getDataMysqlAllNull(year);
-    } else if (typeof playerName == 'undefined') {
-        toExecute = getDataMySqlPlayerNull(year, clubName);
-    } else if (typeof clubName == 'undefined') {
-        toExecute = getDataMySqlClubNull(year, playerName);
-    } else {
-        toExecute = getDataMySql(year, playerName, clubName);
-    }
+            toExecute.then(data => {
+                dt.data;
+                res.send(data);
+            })
+        }
+    }).catch(err => {
+        res.send(err);
+    });
 
-    //TODO: INSERE NO MEMCACHED
+    setDataMemCached(year, playerName, clubName, dt)
 
-    toExecute.then(data => {
-        res.send(data);
-    })
+
 });
 
 function getClubId(clubName) {
@@ -271,7 +281,7 @@ function getDataMySqlClubNull(year, playerName) { //TODO: PARAMETROS DE BUSCA MY
         })
     });
 }
-function getDataMysqlAllNull(year){
+function getDataMysqlAllNull(year) {
     return new Promise((resolve, reject) => {
         var data;
 
@@ -343,20 +353,17 @@ function getDataMemCached(year, playerName, clubName) { //TODO: PARAMETROS DE BU
             if (err) {
                 reject(err);
             }
-
-            data.forEach(server => {
-                if (server.active == true) {
-                    years.push(server.years);
-                    years.sort();
-                }
-            });
-            resolve(years);
+            resolve(data);
         });
     });
 }
 
-function setDataMemCached() { //TODO: PARAMETROS DE SET
+function setDataMemCached(year, playerName, clubName, value) { //TODO: PARAMETROS DE SET
+    return new Promise((resolve, reject) => {
+        var key = `SD_Data_${year}_${typeof clubName != 'undefined' ? clubName : ''}_${typeof playerName != 'undefined' ? playerName : ''}`
 
+        memcached.set(key, value, )
+    });
 }
 
 module.exports = router;
